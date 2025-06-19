@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Box, CircularProgress, Typography, Paper, IconButton, Badge, Dialog, DialogTitle, DialogContent, Button, DialogActions } from '@mui/material';
+import { Box, CircularProgress, Typography, Paper, IconButton, Badge, useMediaQuery, useTheme, Dialog, DialogTitle, DialogContent, Button, DialogActions } from '@mui/material';
 import { Favorite, HeartBroken, HeartBrokenSharp } from '@mui/icons-material';
 import { keyframes } from '@emotion/react';
 import { styled } from '@mui/system';
@@ -51,6 +51,9 @@ export default function Home() {
     const [open, setOpen] = useState(false)
     const [heartbeat, setHeartbeat] = useState(null);
     const [dataPoints, setDataPoints] = useState([]);
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const x = dataPoints.map(p => p.x);
     const y = dataPoints.map(p => p.y);
@@ -158,9 +161,9 @@ export default function Home() {
                     <Typography mt={2}>Đang lấy vị trí...</Typography>
                 </Box>
             )}
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
                 <DialogTitle>Biểu đồ nhịp tim</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ padding: '0px !important' }}>
                     <Plot
                         data={[
                             {
@@ -172,6 +175,7 @@ export default function Home() {
                             },
                         ]}
                         layout={{
+                            margin: { t: 0, l: 0, r: 0, b: 0 },
                             title: 'Nhịp tim thời gian thực',
                             xaxis: {
                                 title: 'Time',
@@ -181,19 +185,18 @@ export default function Home() {
                                 title: 'Biên độ',
                                 range: [minY, maxY],
                             },
-                            margin: { t: 40 },
                         }}
                         config={{
                             responsive: true,
                             displayModeBar: false,
                         }}
-                        style={{ width: '100%', height: '400px' }}
+                        style={{ width: '100%', height: '400px', }}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpen(false)}>Đóng</Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </Box >
     );
 }
