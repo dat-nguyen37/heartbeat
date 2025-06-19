@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Box, CircularProgress, Typography, Paper } from '@mui/material';
+import { Box, CircularProgress, Typography, Paper, IconButton, Badge } from '@mui/material';
+import { Favorite, HeartBroken, HeartBrokenSharp } from '@mui/icons-material';
+
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -45,15 +47,34 @@ export default function Home() {
             }}
         >
             {position ? (
-                <MapContainer center={position} zoom={15} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                        attribution='© OpenStreetMap contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker position={position}>
-                        <Popup>Bạn đang ở đây</Popup>
-                    </Marker>
-                </MapContainer>
+                <Box sx={{ width: "100%", height: '100vh', position: 'relative' }}>
+                    <MapContainer center={position} zoom={17} style={{ height: '100%', width: '100%' }}>
+                        <TileLayer
+                            attribution='© OpenStreetMap contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker position={position}>
+                            <Popup>Bạn đang ở đây</Popup>
+                        </Marker>
+                    </MapContainer>
+                    <IconButton sx={{ position: 'absolute', top: 50, right: 20, zIndex: 1000, backgroundColor: 'white', boxShadow: 10 }}>
+                        <Favorite sx={{ fontSize: '40px' }} color='error' />
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                fontSize: 12,
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            12
+                        </Box>
+                    </IconButton>
+                </Box>
             ) : error ? (
                 <Typography color="error" variant="h6">
                     Lỗi: {error}
