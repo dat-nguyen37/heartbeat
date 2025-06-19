@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Box, CircularProgress, Typography, Paper } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Cấu hình icon mặc định (nếu không sẽ không thấy marker do lỗi icon path)
+// Cấu hình icon mặc định
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl:
@@ -34,11 +35,19 @@ export default function Home() {
     }, []);
 
     return (
-        <div style={{ height: '100vh' }}>
+        <Box
+            sx={{
+                height: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: '#f0f2f5',
+            }}
+        >
             {position ? (
-                <MapContainer center={position} zoom={13} style={{ height: '100%' }}>
+                <MapContainer center={position} zoom={15} style={{ height: '100%', width: '100%' }}>
                     <TileLayer
-                        attribution='© OpenStreetMap'
+                        attribution='© OpenStreetMap contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Marker position={position}>
@@ -46,10 +55,15 @@ export default function Home() {
                     </Marker>
                 </MapContainer>
             ) : error ? (
-                <p>Lỗi: {error}</p>
+                <Typography color="error" variant="h6">
+                    Lỗi: {error}
+                </Typography>
             ) : (
-                <p>Đang lấy vị trí...</p>
+                <Box textAlign="center">
+                    <CircularProgress />
+                    <Typography mt={2}>Đang lấy vị trí...</Typography>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 }
