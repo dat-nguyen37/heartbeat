@@ -42,7 +42,7 @@ const MQTT_OPTIONS = {
     reconnectPeriod: 1000,
 };
 
-const MQTT_URL = 'wss://broker.emqx.io:8083/mqtt';
+const MQTT_URL = 'wss://broker.emqx.io:8084/mqtt';
 
 
 export default function Home() {
