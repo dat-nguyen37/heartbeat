@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Box, CircularProgress, Typography, Paper, IconButton, Badge } from '@mui/material';
+import { Box, CircularProgress, Typography, Paper, IconButton, Badge, Dialog, DialogTitle, DialogContent, Button, DialogActions } from '@mui/material';
 import { Favorite, HeartBroken, HeartBrokenSharp } from '@mui/icons-material';
 import { keyframes } from '@emotion/react';
 import { styled } from '@mui/system';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import mqtt from 'mqtt'
+import Plot from 'react-plotly.js';
+
 
 // Cấu hình icon mặc định
 delete L.Icon.Default.prototype._getIconUrl;
@@ -31,9 +34,63 @@ const BeatingHeart = styled(Favorite)(({ theme }) => ({
 }));
 
 
+const MQTT_OPTIONS = {
+    clientId: 'Client_id_' + Math.random().toString(16).substr(2, 8),
+    connectTimeout: 4000,
+    username: 'datnguyen',
+    password: 'Datnguyen12@',
+    reconnectPeriod: 1000,
+};
+
+const MQTT_URL = 'wss://broker.emqx.io:8083/mqtt';
+
+
 export default function Home() {
     const [position, setPosition] = useState(null);
     const [error, setError] = useState('');
+    const [open, setOpen] = useState(false)
+    const [heartbeat, setHeartbeat] = useState(null);
+    const [dataPoints, setDataPoints] = useState([]);
+
+    const x = dataPoints.map(p => p.x);
+    const y = dataPoints.map(p => p.y);
+
+    const minY = Math.min(...y, 0) - 10;
+    const maxY = Math.max(...y, 0) + 10;
+
+    const maxX = x[x.length - 1] || 0;
+    const minX = Math.max(0, maxX - 200);
+
+    useEffect(() => {
+        const client = mqtt.connect(MQTT_URL, MQTT_OPTIONS);
+
+        client.on('connect', () => {
+            console.log('🔗 MQTT connected');
+            client.subscribe("esp32/add", (err) => {
+                if (!err) console.log('✅ Subscribed to esp32/add');
+            });
+        });
+
+        client.on('message', (receivedTopic, message) => {
+            if (receivedTopic === "esp32/add") {
+                setHeartbeat(message.toString());
+                const value = parseFloat(message.toString());
+                if (isNaN(value)) return;
+
+                setDataPoints(prev => {
+                    const nextIndex = prev.length;
+                    const updated = [...prev, { x: nextIndex, y: value }];
+                    return updated.slice(-1000);
+                });
+            }
+        });
+
+        return () => {
+            client.end(true, () => {
+                console.log('❌ MQTT disconnected');
+            });
+        };
+    }, []);
 
     useEffect(() => {
         const watchId = navigator.geolocation.watchPosition(
@@ -73,8 +130,8 @@ export default function Home() {
                             <Popup>Bạn đang ở đây</Popup>
                         </Marker>
                     </MapContainer>
-                    <IconButton sx={{ position: 'absolute', top: 50, right: 20, zIndex: 1000, backgroundColor: 'white', boxShadow: 10 }}>
-                        <BeatingHeart sx={{ fontSize: '40px' }} color='error' />
+                    <IconButton onClick={() => setOpen(true)} sx={{ position: 'absolute', top: 50, right: 20, zIndex: 1000, boxShadow: 10 }}>
+                        <BeatingHeart sx={{ fontSize: '50px' }} color='error' />
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -87,7 +144,7 @@ export default function Home() {
                                 pointerEvents: 'none',
                             }}
                         >
-                            12
+                            {heartbeat || 0}
                         </Box>
                     </IconButton>
                 </Box>
@@ -101,6 +158,42 @@ export default function Home() {
                     <Typography mt={2}>Đang lấy vị trí...</Typography>
                 </Box>
             )}
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Biểu đồ nhịp tim</DialogTitle>
+                <DialogContent>
+                    <Plot
+                        data={[
+                            {
+                                x,
+                                y,
+                                type: 'scatter',
+                                mode: 'lines',
+                                line: { color: 'red' },
+                            },
+                        ]}
+                        layout={{
+                            title: 'Nhịp tim thời gian thực',
+                            xaxis: {
+                                title: 'Time',
+                                range: [minX, maxX],
+                            },
+                            yaxis: {
+                                title: 'Biên độ',
+                                range: [minY, maxY],
+                            },
+                            margin: { t: 40 },
+                        }}
+                        config={{
+                            responsive: true,
+                            displayModeBar: false,
+                        }}
+                        style={{ width: '100%', height: '400px' }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpen(false)}>Đóng</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
