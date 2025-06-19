@@ -58,11 +58,13 @@ export default function Home() {
     const x = dataPoints.map(p => p.x);
     const y = dataPoints.map(p => p.y);
 
-    const minY = Math.min(...y, 0) - 10;
-    const maxY = Math.max(...y, 0) + 10;
+    const hasData = y.length > 0;
 
-    const maxX = x[x.length - 1] || 0;
-    const minX = Math.max(0, maxX - 200);
+    const minY = hasData ? Math.min(...y) - 10 : undefined;
+    const maxY = hasData ? Math.max(...y) + 10 : undefined;
+
+    const minX = hasData ? Math.max(0, x[x.length - 1] - 200) : undefined;
+    const maxX = hasData ? x[x.length - 1] : undefined;
 
     useEffect(() => {
         const client = mqtt.connect(MQTT_URL, MQTT_OPTIONS);
@@ -161,7 +163,7 @@ export default function Home() {
                     <Typography mt={2}>Đang lấy vị trí...</Typography>
                 </Box>
             )}
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle>Biểu đồ nhịp tim</DialogTitle>
                 <DialogContent sx={{ padding: '0px !important' }}>
                     <Plot
@@ -175,15 +177,15 @@ export default function Home() {
                             },
                         ]}
                         layout={{
-                            margin: { t: 0, l: 0, r: 0, b: 0 },
+                            margin: { t: 0, l: 30, r: 0, b: 0 },
                             title: 'Nhịp tim thời gian thực',
                             xaxis: {
                                 title: 'Time',
-                                range: [minX, maxX],
+                                range: hasData ? [minX, maxX] : undefined,
                             },
                             yaxis: {
                                 title: 'Biên độ',
-                                range: [minY, maxY],
+                                range: hasData ? [minY, maxY] : undefined,
                             },
                         }}
                         config={{
