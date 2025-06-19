@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Box, CircularProgress, Typography, Paper, IconButton, Badge } from '@mui/material';
 import { Favorite, HeartBroken, HeartBrokenSharp } from '@mui/icons-material';
-
+import { keyframes } from '@emotion/react';
+import { styled } from '@mui/system';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -14,6 +15,21 @@ L.Icon.Default.mergeOptions({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+`;
+
+const BeatingHeart = styled(Favorite)(({ theme }) => ({
+    fontSize: 50,
+    color: "#f44336",
+    animation: `${pulse} 1s infinite ease-in-out`,
+}));
+
 
 export default function Home() {
     const [position, setPosition] = useState(null);
@@ -58,7 +74,7 @@ export default function Home() {
                         </Marker>
                     </MapContainer>
                     <IconButton sx={{ position: 'absolute', top: 50, right: 20, zIndex: 1000, backgroundColor: 'white', boxShadow: 10 }}>
-                        <Favorite sx={{ fontSize: '40px' }} color='error' />
+                        <BeatingHeart sx={{ fontSize: '40px' }} color='error' />
                         <Box
                             sx={{
                                 position: 'absolute',
