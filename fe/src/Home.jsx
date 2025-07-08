@@ -48,6 +48,8 @@ const MQTT_URL = process.env.REACT_APP_MQTT_URL;
 
 
 export default function Home() {
+    const lastHeartbeatTimeRef = useRef(Date.now());
+    const fallbackIntervalRef = useRef(null);
     const [position, setPosition] = useState(null);
     const [error, setError] = useState('');
     const [open, setOpen] = useState(false)
@@ -80,14 +82,21 @@ export default function Home() {
                 setHeartbeat(message.toString());
                 const value = parseFloat(message.toString());
                 if (isNaN(value)) return;
+
+                lastHeartbeatTimeRef.current = Date.now();
+
+                if (fallbackIntervalRef.current) {
+                    clearInterval(fallbackIntervalRef.current);
+                    fallbackIntervalRef.current = null;
+                }
                 const now = new Date();
-                const formattedTime = now.toLocaleString('vi-VN');
+                const formattedTime = now.toLocaleTimeString('vi-VN');
 
                 setDataPoints(prev => {
                     const updated = [
                         ...prev,
                         {
-                            x: now,            // Giữ nguyên để Plotly hiểu đúng
+                            x: now,
                             y: value,
                             hovertext: `🕒 ${formattedTime}<br>❤️ Nhịp tim: ${value}`, // Tooltip đẹp
                         }
@@ -97,7 +106,37 @@ export default function Home() {
             }
         });
 
+        const checker = setInterval(() => {
+            const now = Date.now();
+            const timeSinceLast = now - lastHeartbeatTimeRef.current;
+
+            if (timeSinceLast > 2000 && !fallbackIntervalRef.current) {
+                setHeartbeat(null)
+                // ✅ Bắt đầu fallback interval cập nhật 0 mỗi giây
+                fallbackIntervalRef.current = setInterval(() => {
+                    const now = new Date();
+                    const formattedTime = now.toLocaleTimeString('vi-VN');
+
+                    setDataPoints(prev => {
+                        const updated = [
+                            ...prev,
+                            {
+                                x: now,
+                                y: 0,
+                                hovertext: `🕒 ${formattedTime}<br>❤️ Nhịp tim: 0`,
+                            }
+                        ];
+                        return updated.slice(-1000);
+                    });
+                }, 1000);
+            }
+        }, 1000);
+
         return () => {
+            clearInterval(checker);
+            if (fallbackIntervalRef.current) {
+                clearInterval(fallbackIntervalRef.current);
+            }
             client.end(true, () => {
                 console.log('❌ MQTT disconnected');
             });
@@ -171,17 +210,20 @@ export default function Home() {
                 </Box>
             )}
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Biểu đồ nhịp tim</DialogTitle>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    Biểu đồ nhịp tim
+                    <Typography><h3>{heartbeat || 0}</h3></Typography>
+                </DialogTitle>
                 <DialogContent sx={{ padding: '0px !important' }}>
                     <Plot
                         data={[
                             {
-                                x: dataPoints.map(p => p.x),
-                                y: dataPoints.map(p => p.y),
+                                x: dataPoints.length > 0 ? dataPoints.map(p => p.x) : [new Date()],
+                                y: dataPoints.length > 0 ? dataPoints.map(p => p.y) : [0],
                                 type: 'scatter',
                                 mode: 'lines+markers',
                                 line: { color: 'red' },
-                                hovertext: dataPoints.map(p => p.hovertext), // 👈 Tooltip hiển thị đẹp
+                                hovertext: dataPoints.length > 0 ? dataPoints.map(p => p.hovertext) : [''], // 👈 Tooltip hiển thị đẹp
                                 hoverinfo: 'text',
                             },
                         ]}
@@ -189,8 +231,15 @@ export default function Home() {
                             margin: { t: 0, l: 30, r: 0, b: 0 },
                             title: 'Nhịp tim thời gian thực',
                             xaxis: {
-                                title: 'Thời gian',
+                                title: {
+                                    text: 'Thời gian',
+                                    standoff: 40,          // Khoảng cách giữa trục và tiêu đề
+                                },
                                 type: 'date',
+                                tickformat: '%H:%M',              // Chỉ hiện giờ:phút
+                                dtick: 5 * 60 * 1000,             // 5 phút (đơn vị là mili-giây)
+                                tickangle: -45,
+                                automargin: true,                  // (tuỳ chọn) nghiêng nhãn trục để dễ đọc
                             },
                             yaxis: {
                                 title: 'Biên độ',
