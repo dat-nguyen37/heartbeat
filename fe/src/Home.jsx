@@ -110,7 +110,7 @@ export default function Home() {
             const now = Date.now();
             const timeSinceLast = now - lastHeartbeatTimeRef.current;
 
-            if (timeSinceLast > 4000 && !fallbackIntervalRef.current) {
+            if (timeSinceLast > 10000 && !fallbackIntervalRef.current) {
                 setHeartbeat(null)
                 // ✅ Bắt đầu fallback interval cập nhật 0 mỗi giây
                 fallbackIntervalRef.current = setInterval(() => {
