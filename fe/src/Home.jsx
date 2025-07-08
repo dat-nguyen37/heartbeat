@@ -37,8 +37,8 @@ const BeatingHeart = styled(Favorite)(({ theme }) => ({
 const MQTT_OPTIONS = {
     clientId: 'Client_id_' + Math.random().toString(16).substr(2, 8),
     connectTimeout: 4000,
-    username: 'datnguyen',
-    password: 'Datnguyen12@',
+    username: 'ruoidz1st',
+    password: 'a6k46pbc',
     reconnectPeriod: 1000,
 };
 
@@ -71,13 +71,13 @@ export default function Home() {
 
         client.on('connect', () => {
             console.log('🔗 MQTT connected');
-            client.subscribe("esp32/add", (err) => {
-                if (!err) console.log('✅ Subscribed to esp32/add');
+            client.subscribe("health/pulse", (err) => {
+                if (!err) console.log('✅ Subscribed to health/pulse');
             });
         });
 
         client.on('message', (receivedTopic, message) => {
-            if (receivedTopic === "esp32/add") {
+            if (receivedTopic === "health/pulse") {
                 setHeartbeat(message.toString());
                 const value = parseFloat(message.toString());
                 if (isNaN(value)) return;
