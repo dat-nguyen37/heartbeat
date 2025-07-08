@@ -42,7 +42,9 @@ const MQTT_OPTIONS = {
     reconnectPeriod: 1000,
 };
 
+// const MQTT_URL = "wss://7ec4f05f00f044a0bab76fb5f0be2ffd.s2.eu.hivemq.cloud:8884/mqtt";
 const MQTT_URL = process.env.REACT_APP_MQTT_URL;
+
 
 
 export default function Home() {
@@ -59,9 +61,6 @@ export default function Home() {
     const y = dataPoints.map(p => p.y);
 
     const hasData = y.length > 0;
-
-    const minY = hasData ? Math.min(...y) - 10 : undefined;
-    const maxY = hasData ? Math.max(...y) + 10 : undefined;
 
     const minX = hasData ? Math.max(0, x[x.length - 1] - 200) : undefined;
     const maxX = hasData ? x[x.length - 1] : undefined;
@@ -81,10 +80,18 @@ export default function Home() {
                 setHeartbeat(message.toString());
                 const value = parseFloat(message.toString());
                 if (isNaN(value)) return;
+                const now = new Date();
+                const formattedTime = now.toLocaleString('vi-VN');
 
                 setDataPoints(prev => {
-                    const nextIndex = prev.length;
-                    const updated = [...prev, { x: nextIndex, y: value }];
+                    const updated = [
+                        ...prev,
+                        {
+                            x: now,            // Giữ nguyên để Plotly hiểu đúng
+                            y: value,
+                            hovertext: `🕒 ${formattedTime}<br>❤️ Nhịp tim: ${value}`, // Tooltip đẹp
+                        }
+                    ];
                     return updated.slice(-1000);
                 });
             }
@@ -169,23 +176,25 @@ export default function Home() {
                     <Plot
                         data={[
                             {
-                                x,
-                                y,
+                                x: dataPoints.map(p => p.x),
+                                y: dataPoints.map(p => p.y),
                                 type: 'scatter',
-                                mode: 'lines',
+                                mode: 'lines+markers',
                                 line: { color: 'red' },
+                                hovertext: dataPoints.map(p => p.hovertext), // 👈 Tooltip hiển thị đẹp
+                                hoverinfo: 'text',
                             },
                         ]}
                         layout={{
                             margin: { t: 0, l: 30, r: 0, b: 0 },
                             title: 'Nhịp tim thời gian thực',
                             xaxis: {
-                                title: 'Time',
-                                range: hasData ? [minX, maxX] : undefined,
+                                title: 'Thời gian',
+                                type: 'date',
                             },
                             yaxis: {
                                 title: 'Biên độ',
-                                range: hasData ? [minY, maxY] : undefined,
+                                range: [0, 130],
                             },
                         }}
                         config={{
