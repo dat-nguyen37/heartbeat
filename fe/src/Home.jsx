@@ -110,7 +110,7 @@ export default function Home() {
             const now = Date.now();
             const timeSinceLast = now - lastHeartbeatTimeRef.current;
 
-            if (timeSinceLast > 2000 && !fallbackIntervalRef.current) {
+            if (timeSinceLast > 4000 && !fallbackIntervalRef.current) {
                 setHeartbeat(null)
                 // ✅ Bắt đầu fallback interval cập nhật 0 mỗi giây
                 fallbackIntervalRef.current = setInterval(() => {
@@ -237,7 +237,7 @@ export default function Home() {
                                 },
                                 type: 'date',
                                 tickformat: '%H:%M',              // Chỉ hiện giờ:phút
-                                dtick: 5 * 60 * 1000,             // 5 phút (đơn vị là mili-giây)
+                                dtick: 60 * 1000,             // 1 phút (đơn vị là mili-giây)
                                 tickangle: -45,
                                 automargin: true,                  // (tuỳ chọn) nghiêng nhãn trục để dễ đọc
                             },
