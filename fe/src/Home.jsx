@@ -237,7 +237,7 @@ export default function Home() {
                                 },
                                 type: 'date',
                                 tickformat: '%H:%M',              // Chỉ hiện giờ:phút
-                                dtick: 60 * 1000,             // 1 phút (đơn vị là mili-giây)
+                                dtick: 10 * 1000,             // 10 giây (đơn vị là mili-giây)
                                 tickangle: -45,
                                 automargin: true,                  // (tuỳ chọn) nghiêng nhãn trục để dễ đọc
                             },
